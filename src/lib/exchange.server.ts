@@ -1,16 +1,19 @@
 import {
   applyClick,
   applyImpression,
+  applyRun,
   pickCreative,
   runAuction,
   shouldConvert,
   shouldSimulateClick,
+  shouldSimulateRun,
   todayISO,
 } from "./auction";
 import { getSql } from "./db";
 import { PUBLISHERS, publisherById, type Publisher, type Slot } from "./network";
+import { asOffer, attachProof, bindSpec, clipTask, runPrice } from "./proof";
 import { seedCampaigns } from "./seed";
-import type { AdCreative, AuctionEvent, Campaign, OpenSite, Platform } from "./types";
+import type { AdCreative, AgentOffer, AuctionEvent, Campaign, OpenSite, PageTask, Platform } from "./types";
 
 const TAPE_CAP = 140;
 
@@ -19,6 +22,8 @@ export type ServeResult = {
   campaign: Campaign | null;
   creative: AdCreative | null;
   clickUrl: string;
+  runUrl: string;
+  offer: AgentOffer | null;
 };
 
 function parseBody<T>(raw: unknown): T {
@@ -32,6 +37,17 @@ function asSlot(format: Platform, slotId: string): Slot {
     format,
     placement:
       format === "search" ? "sponsored" : format === "social" ? "infeed" : "leaderboard",
+  };
+}
+
+function pack(origin: string, eventId: string, campaign: Campaign | null) {
+  const clickUrl = `${origin}/api/ads/click?e=${encodeURIComponent(eventId)}`;
+  const runUrl = `${origin}/api/ads/run?e=${encodeURIComponent(eventId)}`;
+  const withProof = campaign ? attachProof(campaign) : null;
+  return {
+    clickUrl,
+    runUrl,
+    offer: withProof ? asOffer({ campaign: withProof, clickUrl, runUrl }) : null,
   };
 }
 
@@ -84,7 +100,7 @@ export async function listCampaigns(): Promise<Campaign[]> {
   const rows = await sql<{ id: string; body: unknown }>`
     select id, body from campaigns
   `;
-  const list = rows.map((r) => parseBody<Campaign>(r.body));
+  const list = rows.map((r) => attachProof(parseBody<Campaign>(r.body)));
   list.sort((a, b) => (a.owned === b.owned ? 0 : a.owned ? -1 : 1));
   return list;
 }
@@ -157,7 +173,7 @@ async function findCampaign(id: string): Promise<Campaign | null> {
   const rows = await sql<{ body: unknown }>`
     select body from campaigns where id = ${id} limit 1
   `;
-  return rows[0] ? parseBody<Campaign>(rows[0].body) : null;
+  return rows[0] ? attachProof(parseBody<Campaign>(rows[0].body)) : null;
 }
 
 async function touchSite(publisher: Publisher) {
@@ -207,7 +223,7 @@ export async function serveAd(opts: {
       event: existing,
       campaign,
       creative,
-      clickUrl: `${opts.origin}/api/ads/click?e=${encodeURIComponent(existing.id)}`,
+      ...pack(opts.origin, existing.id, campaign),
     };
   }
 
@@ -236,12 +252,30 @@ export async function serveAd(opts: {
   await saveEvent(event);
   await touchSite(publisher);
 
-  if (opts.engage && event.outcome === "won" && shouldSimulateClick(event)) {
-    const clicked = await clickAd(event.id, { simulated: true });
-    if (clicked.event) {
-      campaign = clicked.campaign ?? campaign;
-      event.clicked = clicked.event.clicked;
-      event.converted = clicked.event.converted;
+  if (opts.engage && event.outcome === "won") {
+    const hasProof = Boolean(campaign?.proof?.spec);
+    if (shouldSimulateRun(event, hasProof)) {
+      const ran = await runAd(event.id, {
+        simulated: true,
+        live: false,
+        task: clipTask({
+          title: publisher.articles[0]?.title ?? publisher.name,
+          url: opts.pageUrl ?? `https://${publisher.domain}/`,
+          excerpt: (publisher.articles[0]?.body ?? []).join(" ") || publisher.blurb,
+        }),
+      });
+      if (ran.event) {
+        campaign = ran.campaign ?? campaign;
+        event.ran = ran.event.ran;
+        event.converted = ran.event.converted;
+      }
+    } else if (shouldSimulateClick(event)) {
+      const clicked = await clickAd(event.id, { simulated: true });
+      if (clicked.event) {
+        campaign = clicked.campaign ?? campaign;
+        event.clicked = clicked.event.clicked;
+        event.converted = clicked.event.converted;
+      }
     }
   }
 
@@ -252,7 +286,7 @@ export async function serveAd(opts: {
     event,
     campaign,
     creative,
-    clickUrl: `${opts.origin}/api/ads/click?e=${encodeURIComponent(event.id)}`,
+    ...pack(opts.origin, event.id, campaign),
   };
 }
 
@@ -282,6 +316,73 @@ export async function clickAd(
   await saveCampaign(nextCampaign);
   await saveEvent(nextEvent);
   return { event: nextEvent, campaign: nextCampaign, destination: nextCampaign.destination };
+}
+
+export async function runAd(
+  eventId: string,
+  opts?: { simulated?: boolean; live?: boolean; task?: PageTask },
+): Promise<{
+  event: AuctionEvent | null;
+  campaign: Campaign | null;
+  proof: Campaign["proof"] | null;
+  billed: number;
+  output: string;
+  live: boolean;
+}> {
+  const event = await findEvent(eventId);
+  if (!event || event.outcome !== "won" || !event.campaignId) {
+    return { event, campaign: null, proof: null, billed: 0, output: "", live: false };
+  }
+  const campaign = await findCampaign(event.campaignId);
+  if (!campaign?.proof?.spec) {
+    return { event, campaign, proof: null, billed: 0, output: "", live: false };
+  }
+
+  const task = clipTask(
+    opts?.task ?? { title: event.taskTitle ?? event.siteHost ?? "", url: event.pageUrl ?? "" },
+  );
+
+  if (event.ran) {
+    return {
+      event,
+      campaign,
+      proof: campaign.proof,
+      billed: 0,
+      output: event.runOutput || bindSpec(campaign.proof.sample, task),
+      live: Boolean(event.runLive),
+    };
+  }
+
+  const { executeSpec } = await import("./execute-spec.server");
+  const exec = await executeSpec({
+    spec: campaign.proof.spec,
+    sample: campaign.proof.sample,
+    task,
+    live: Boolean(opts?.live) && !opts?.simulated,
+  });
+
+  const marked = { ...event, ran: true };
+  const converted = shouldConvert(campaign, marked);
+  const billed = runPrice(event.price, campaign.cpcBid);
+  const nextEvent: AuctionEvent = {
+    ...marked,
+    converted: event.converted || converted,
+    simulated: opts?.simulated ?? event.simulated ?? false,
+    runOutput: exec.output,
+    runLive: exec.live,
+    taskTitle: task.title || event.taskTitle,
+  };
+  const nextCampaign = applyRun(campaign, todayISO(), event.price, converted && !event.converted);
+  await saveCampaign(nextCampaign);
+  await saveEvent(nextEvent);
+  return {
+    event: nextEvent,
+    campaign: nextCampaign,
+    proof: nextCampaign.proof ?? campaign.proof,
+    billed,
+    output: exec.output,
+    live: exec.live,
+  };
 }
 
 export async function pumpVisitors(n: number, origin: string) {

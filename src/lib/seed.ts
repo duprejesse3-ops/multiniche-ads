@@ -1,4 +1,5 @@
 import { STORE } from "./catalog";
+import { attachProof } from "./proof";
 import type { Audience, Campaign } from "./types";
 
 function dayStamp(offset: number) {
@@ -21,6 +22,10 @@ const HOUSE = STORE.name;
 const DEST = STORE.href;
 
 export function seedCampaigns(): Campaign[] {
+  return rawSeed().map(attachProof);
+}
+
+function rawSeed(): Campaign[] {
   return [
     {
       id: "c_deepwork",

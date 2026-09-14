@@ -122,7 +122,7 @@ JSON shape:
     { "name": "", "description": "", "size": "e.g. 2.4M", "affinity": 0-100, "tags": ["",""] }
   ]
 }
-Rules: one creative per requested platform, in that order. Headlines must be distinctive, not generic slogans. Prefer CTAs like Watch it run, Get the pack, Open the catalog, See the proof, Start a free run. Video body is a 15s script with VO / Super / End card. Size is a plausible reach estimate.`,
+Rules: one creative per requested platform, in that order. Headlines must be distinctive, not generic slogans. Prefer CTAs like Run it on this page, Get the pack, Open the catalog, See the proof, Keep the spec. Video body is a 15s script with VO / Super / End card. Size is a plausible reach estimate.`,
     });
     if (!result.ok) return result;
     try {

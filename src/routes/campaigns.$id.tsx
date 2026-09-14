@@ -185,8 +185,8 @@ function CampaignDetail({ campaign }: { campaign: Campaign }) {
         <Mini label="Spend today" value={formatMoney(t.spend, 2)} />
         <Mini label="Impressions" value={formatCompact(t.impressions)} />
         <Mini
-          label="CTR / CPC"
-          value={`${formatPct(t.impressions ? t.clicks / t.impressions : 0)} · ${formatMoney(t.clicks ? t.spend / t.clicks : 0, 2)}`}
+          label="Spec runs"
+          value={`${formatCompact(t.runs ?? 0)} · ${formatPct(t.impressions ? (t.runs ?? 0) / t.impressions : 0)}`}
         />
         <Mini
           label={campaign.objective === "leads" ? "CPA" : "ROAS"}
@@ -271,6 +271,21 @@ function CampaignDetail({ campaign }: { campaign: Campaign }) {
           <ExchangeTape tape={tape} empty="Has not entered an auction yet." />
         </CardBody>
       </Card>
+
+      {campaign.proof?.spec ? (
+        <Card className="mt-4">
+          <CardHeader>
+            <h2 className="font-display text-xl">Spec they run on the page</h2>
+            <p className="text-sm text-muted">
+              {campaign.proof.sku} · {campaign.proof.license} · the publisher’s article is the task
+            </p>
+          </CardHeader>
+          <CardBody className="space-y-3">
+            <p className="font-mono text-xs leading-relaxed text-muted">{campaign.proof.spec}</p>
+            <p className="text-sm leading-relaxed">{campaign.proof.sample}</p>
+          </CardBody>
+        </Card>
+      ) : null}
 
       <section className="mt-8">
         <h2 className="mb-4 font-display text-2xl">Creatives</h2>

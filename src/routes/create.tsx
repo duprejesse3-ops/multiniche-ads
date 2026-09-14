@@ -10,6 +10,7 @@ import { Input, Textarea } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { composeCampaign, type ComposeResult } from "@/lib/ai";
 import { CATALOG, STORE } from "@/lib/catalog";
+import { proofFromSku } from "@/lib/proof";
 import { objectiveLabel, platformLabel } from "@/lib/format";
 import { suggestedBid } from "@/lib/auction";
 import { useDesk } from "@/lib/store";
@@ -125,6 +126,7 @@ function CreatePage() {
       destination: destination.trim() || STORE.href,
       owned: true,
       aov: sku?.price ?? 19,
+      proof: sku ? proofFromSku(sku) : undefined,
       strategy: draft?.strategy ?? (notes.trim() || "Launched from a brief; refine in flight."),
       targeting: draft?.targeting ?? "Open prospecting pending first-party signals.",
       creatives,

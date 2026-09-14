@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AudiencesRouteImport } from './routes/audiences'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as InventoryRouteImport } from './routes/inventory'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as StudioRouteImport } from './routes/studio'
 import { Route as TagDotjsRouteImport } from './routes/tag[.]js'
@@ -20,6 +21,8 @@ import { Route as WebRouteImport } from './routes/web'
 import { Route as CampaignsIdRouteImport } from './routes/campaigns.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as ApiAdsClickRouteImport } from './routes/api/ads/click'
+import { Route as ApiAdsOfferRouteImport } from './routes/api/ads/offer'
+import { Route as ApiAdsRunRouteImport } from './routes/api/ads/run'
 import { Route as ApiAdsServeRouteImport } from './routes/api/ads/serve'
 
 const IndexRoute = IndexRouteImport.update({
@@ -40,6 +43,11 @@ const CreateRoute = CreateRouteImport.update({
 const InventoryRoute = InventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -77,6 +85,16 @@ const ApiAdsClickRoute = ApiAdsClickRouteImport.update({
   path: '/api/ads/click',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdsOfferRoute = ApiAdsOfferRouteImport.update({
+  id: '/api/ads/offer',
+  path: '/api/ads/offer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdsRunRoute = ApiAdsRunRouteImport.update({
+  id: '/api/ads/run',
+  path: '/api/ads/run',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdsServeRoute = ApiAdsServeRouteImport.update({
   id: '/api/ads/serve',
   path: '/api/ads/serve',
@@ -88,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/audiences': typeof AudiencesRoute
   '/create': typeof CreateRoute
   '/inventory': typeof InventoryRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/search': typeof SearchRoute
   '/studio': typeof StudioRoute
   '/tag.js': typeof TagDotjsRoute
@@ -95,6 +114,8 @@ export interface FileRoutesByFullPath {
   '/campaigns/$id': typeof CampaignsIdRoute
   '/p/$slug': typeof PSlugRoute
   '/api/ads/click': typeof ApiAdsClickRoute
+  '/api/ads/offer': typeof ApiAdsOfferRoute
+  '/api/ads/run': typeof ApiAdsRunRoute
   '/api/ads/serve': typeof ApiAdsServeRoute
 }
 export interface FileRoutesByTo {
@@ -102,6 +123,7 @@ export interface FileRoutesByTo {
   '/audiences': typeof AudiencesRoute
   '/create': typeof CreateRoute
   '/inventory': typeof InventoryRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/search': typeof SearchRoute
   '/studio': typeof StudioRoute
   '/tag.js': typeof TagDotjsRoute
@@ -109,6 +131,8 @@ export interface FileRoutesByTo {
   '/campaigns/$id': typeof CampaignsIdRoute
   '/p/$slug': typeof PSlugRoute
   '/api/ads/click': typeof ApiAdsClickRoute
+  '/api/ads/offer': typeof ApiAdsOfferRoute
+  '/api/ads/run': typeof ApiAdsRunRoute
   '/api/ads/serve': typeof ApiAdsServeRoute
 }
 export interface FileRoutesById {
@@ -117,6 +141,7 @@ export interface FileRoutesById {
   '/audiences': typeof AudiencesRoute
   '/create': typeof CreateRoute
   '/inventory': typeof InventoryRoute
+  '/llms.txt': typeof LlmsDottxtRoute
   '/search': typeof SearchRoute
   '/studio': typeof StudioRoute
   '/tag.js': typeof TagDotjsRoute
@@ -124,6 +149,8 @@ export interface FileRoutesById {
   '/campaigns/$id': typeof CampaignsIdRoute
   '/p/$slug': typeof PSlugRoute
   '/api/ads/click': typeof ApiAdsClickRoute
+  '/api/ads/offer': typeof ApiAdsOfferRoute
+  '/api/ads/run': typeof ApiAdsRunRoute
   '/api/ads/serve': typeof ApiAdsServeRoute
 }
 export interface FileRouteTypes {
@@ -133,6 +160,7 @@ export interface FileRouteTypes {
     | '/audiences'
     | '/create'
     | '/inventory'
+    | '/llms.txt'
     | '/search'
     | '/studio'
     | '/tag.js'
@@ -140,6 +168,8 @@ export interface FileRouteTypes {
     | '/campaigns/$id'
     | '/p/$slug'
     | '/api/ads/click'
+    | '/api/ads/offer'
+    | '/api/ads/run'
     | '/api/ads/serve'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -147,6 +177,7 @@ export interface FileRouteTypes {
     | '/audiences'
     | '/create'
     | '/inventory'
+    | '/llms.txt'
     | '/search'
     | '/studio'
     | '/tag.js'
@@ -154,6 +185,8 @@ export interface FileRouteTypes {
     | '/campaigns/$id'
     | '/p/$slug'
     | '/api/ads/click'
+    | '/api/ads/offer'
+    | '/api/ads/run'
     | '/api/ads/serve'
   id:
     | '__root__'
@@ -161,6 +194,7 @@ export interface FileRouteTypes {
     | '/audiences'
     | '/create'
     | '/inventory'
+    | '/llms.txt'
     | '/search'
     | '/studio'
     | '/tag.js'
@@ -168,6 +202,8 @@ export interface FileRouteTypes {
     | '/campaigns/$id'
     | '/p/$slug'
     | '/api/ads/click'
+    | '/api/ads/offer'
+    | '/api/ads/run'
     | '/api/ads/serve'
   fileRoutesById: FileRoutesById
 }
@@ -176,6 +212,7 @@ export interface RootRouteChildren {
   AudiencesRoute: typeof AudiencesRoute
   CreateRoute: typeof CreateRoute
   InventoryRoute: typeof InventoryRoute
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
   SearchRoute: typeof SearchRoute
   StudioRoute: typeof StudioRoute
   TagDotjsRoute: typeof TagDotjsRoute
@@ -183,6 +220,8 @@ export interface RootRouteChildren {
   CampaignsIdRoute: typeof CampaignsIdRoute
   PSlugRoute: typeof PSlugRoute
   ApiAdsClickRoute: typeof ApiAdsClickRoute
+  ApiAdsOfferRoute: typeof ApiAdsOfferRoute
+  ApiAdsRunRoute: typeof ApiAdsRunRoute
   ApiAdsServeRoute: typeof ApiAdsServeRoute
 }
 
@@ -214,6 +253,13 @@ declare module '@tanstack/react-router' {
       path: '/inventory'
       fullPath: '/inventory'
       preLoaderRoute: typeof InventoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -265,6 +311,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdsClickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ads/offer': {
+      id: '/api/ads/offer'
+      path: '/api/ads/offer'
+      fullPath: '/api/ads/offer'
+      preLoaderRoute: typeof ApiAdsOfferRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ads/run': {
+      id: '/api/ads/run'
+      path: '/api/ads/run'
+      fullPath: '/api/ads/run'
+      preLoaderRoute: typeof ApiAdsRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ads/serve': {
       id: '/api/ads/serve'
       path: '/api/ads/serve'
@@ -280,6 +340,7 @@ const rootRouteChildren: RootRouteChildren = {
   AudiencesRoute: AudiencesRoute,
   CreateRoute: CreateRoute,
   InventoryRoute: InventoryRoute,
+  LlmsDottxtRoute: LlmsDottxtRoute,
   SearchRoute: SearchRoute,
   StudioRoute: StudioRoute,
   TagDotjsRoute: TagDotjsRoute,
@@ -287,6 +348,8 @@ const rootRouteChildren: RootRouteChildren = {
   CampaignsIdRoute: CampaignsIdRoute,
   PSlugRoute: PSlugRoute,
   ApiAdsClickRoute: ApiAdsClickRoute,
+  ApiAdsOfferRoute: ApiAdsOfferRoute,
+  ApiAdsRunRoute: ApiAdsRunRoute,
   ApiAdsServeRoute: ApiAdsServeRoute,
 }
 export const routeTree = rootRouteImport

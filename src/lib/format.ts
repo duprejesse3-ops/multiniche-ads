@@ -25,16 +25,26 @@ export function formatNumber(n: number) {
   return new Intl.NumberFormat("en-US").format(Math.round(n));
 }
 
+const EMPTY = {
+  impressions: 0,
+  clicks: 0,
+  runs: 0,
+  spend: 0,
+  conversions: 0,
+  revenue: 0,
+};
+
 export function rollup(stats: DailyStat[]) {
   return stats.reduce(
     (acc, s) => ({
       impressions: acc.impressions + s.impressions,
       clicks: acc.clicks + s.clicks,
+      runs: acc.runs + (s.runs ?? 0),
       spend: acc.spend + s.spend,
       conversions: acc.conversions + s.conversions,
       revenue: acc.revenue + s.revenue,
     }),
-    { impressions: 0, clicks: 0, spend: 0, conversions: 0, revenue: 0 },
+    { ...EMPTY },
   );
 }
 
@@ -44,21 +54,20 @@ export function campaignRollup(c: Campaign) {
 
 export function todayStat(c: Campaign): DailyStat {
   const date = todayISO();
-  return (
-    c.stats.find((s) => s.date === date) ?? {
-      date,
-      impressions: 0,
-      clicks: 0,
-      spend: 0,
-      conversions: 0,
-      revenue: 0,
-    }
-  );
+  const s = c.stats.find((x) => x.date === date);
+  return s
+    ? { ...s, runs: s.runs ?? 0 }
+    : { date, impressions: 0, clicks: 0, runs: 0, spend: 0, conversions: 0, revenue: 0 };
 }
 
 export function ctr(stats: DailyStat[]) {
   const r = rollup(stats);
   return r.impressions === 0 ? 0 : r.clicks / r.impressions;
+}
+
+export function runRate(stats: DailyStat[]) {
+  const r = rollup(stats);
+  return r.impressions === 0 ? 0 : r.runs / r.impressions;
 }
 
 export function roas(stats: DailyStat[]) {

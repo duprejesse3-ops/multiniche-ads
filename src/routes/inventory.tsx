@@ -28,18 +28,20 @@ function InventoryPage() {
   data-format="display"
   data-tags="founders,productivity,chatgpt,ops,marketing">
 </div>
-<script async src="${src}/tag.js?v=3"></script>`;
+<script async src="${src}/tag.js?v=5"></script>`;
   }, [origin]);
 
   return (
     <AppShell eyebrow="Supply" title="Inventory">
       <p className="mb-8 max-w-2xl text-sm leading-relaxed text-muted">
-        First-party properties run in this app. The tag below is the open-web contract — paste it on{" "}
+        First-party properties run in this app. The tag is the human contract.{" "}
+        <code className="text-muted">POST /api/ads/run</code> is the agent contract — same auction,
+        the page (or the agent’s payload) is the task. Paste the tag on{" "}
         <a href="https://multinicheai.com" className="text-fg underline-offset-2 hover:underline">
           multinicheai.com
         </a>{" "}
-        or any other page. Each pageview auctions against the live book on this server. Clicks
-        bill, then send the visitor to the destination.
+        or any other page. Each pageview auctions against the live book. A run bills when they
+        execute the SKU on that page. Clicks still 302 to the destination.
       </p>
 
       <Card className="mb-8">
@@ -75,6 +77,28 @@ function InventoryPage() {
             <code className="text-muted">data-format</code> is display, social, or search.{" "}
             <code className="text-muted">data-tags</code> steers quality. Add as many{" "}
             <code className="text-muted">data-mn-ad</code> nodes as you have slots; one script.
+          </p>
+        </CardBody>
+      </Card>
+
+      <Card className="mb-8">
+        <CardHeader>
+          <h2 className="font-display text-xl">Agent protocol</h2>
+          <p className="text-sm text-muted">
+            ChatGPT and Google keep ads inside their apps. An agent on the open web auctions here,
+            then POSTs its own task. The SKU runs on that task. They keep the spec.
+          </p>
+        </CardHeader>
+        <CardBody>
+          <pre className="overflow-x-auto rounded-md border border-border bg-raised p-4 text-xs leading-relaxed text-muted">
+            {`GET ${origin || "https://your-exchange.example"}/api/ads/offer?q=deep+work+prompts&site=agent.local
+POST ${origin || "https://your-exchange.example"}/api/ads/run
+{ "e": "<eventId>", "title": "my job", "excerpt": "the work to run the spec on" }
+GET ${origin || "https://your-exchange.example"}/llms.txt`}
+          </pre>
+          <p className="mt-3 text-xs leading-relaxed text-subtle">
+            Response is a SpecOffer with acceptsTask. POST the page (or any job) to runUrl. A run
+            bills once. Humans tap Run it on this page. They can keep the spec.
           </p>
         </CardBody>
       </Card>

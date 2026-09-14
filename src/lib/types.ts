@@ -26,10 +26,42 @@ export type Audience = {
   tags: string[];
 };
 
+export type Proof = {
+  sku: string;
+  spec: string;
+  sample: string;
+  license: string;
+};
+
+export type PageTask = {
+  title: string;
+  url: string;
+  excerpt: string;
+};
+
+export type AgentOffer = {
+  type: "SpecOffer";
+  protocol: "multiniche-ads/1";
+  brand: string;
+  product: string;
+  sku: string;
+  price: number;
+  currency: "USD";
+  license: string;
+  spec: string;
+  sample: string;
+  destination: string;
+  clickUrl: string;
+  runUrl: string;
+  acceptsTask: true;
+};
+
+
 export type DailyStat = {
   date: string;
   impressions: number;
   clicks: number;
+  runs: number;
   spend: number;
   conversions: number;
   revenue: number;
@@ -61,6 +93,10 @@ export type AuctionEvent = {
   outcome: "won" | "no_fill";
   rivals: RivalBid[];
   clicked?: boolean;
+  ran?: boolean;
+  runOutput?: string;
+  runLive?: boolean;
+  taskTitle?: string;
   converted?: boolean;
   simulated?: boolean;
   pageUrl?: string;
@@ -82,6 +118,7 @@ export type Campaign = {
   aov: number;
   strategy: string;
   targeting: string;
+  proof?: Proof;
   creatives: AdCreative[];
   audiences: Audience[];
   stats: DailyStat[];
@@ -112,4 +149,3 @@ export type OpenSite = {
   hits: number;
   lastSeen: string;
 };
-

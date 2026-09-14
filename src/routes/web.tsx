@@ -10,7 +10,7 @@ function OpenWebPage() {
       existing.remove();
     }
     const script = document.createElement("script");
-    script.src = "/tag.js?v=3";
+    script.src = "/tag.js?v=5";
     script.async = true;
     script.dataset.mnTag = "1";
     document.body.appendChild(script);
@@ -41,7 +41,8 @@ function OpenWebPage() {
           <h1 className="mt-2 font-serif text-4xl tracking-tight">The morning block is a spec</h1>
           <p className="mt-3 max-w-xl text-[#4a4640]">
             A standalone page. No app chrome. The units below are filled by the Multiniche tag —
-            the same snippet you paste on the store.
+            tap <span className="text-[#1a1916]">Run it on this page</span>. The article is the
+            task. That completed job is the billable event.
           </p>
         </div>
       </header>
@@ -58,13 +59,20 @@ function OpenWebPage() {
 
         <article className="mt-10 space-y-5 text-base leading-relaxed text-[#1a1916]">
           <p>
+            Jules has seven meetings on Thursday. Standup at 9, investor coffee at 11, design
+            review at 2. The only unblocked stretch is 6:30 to 8:00 in the morning. Slack is
+            already on fire about a $340 refund. Maya in ops left two comments on the onboarding
+            email. The one outcome that makes Thursday a win is shipping that email before standup.
+          </p>
+          <p>
             Most founders do not have a focus problem. They have a calendar that treats deep work as
             leftover. Write the rule down. Give the assistant the spec, not a vibe.
           </p>
           <p>
             This page is what the open web looks like to the exchange: a host, a slot, a few tags.
             The auction does not know it is a demo. Pause a campaign on the desk, refresh this
-            page, and watch the fill change.
+            page, and watch the fill change. Run the ad on this article — the SKU has to work on
+            Jules’s Thursday, not a canned sample.
           </p>
         </article>
 

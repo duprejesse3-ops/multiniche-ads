@@ -38,15 +38,15 @@ function Home() {
       (a, s) => ({
         impressions: a.impressions + s.impressions,
         clicks: a.clicks + s.clicks,
+        runs: a.runs + (s.runs ?? 0),
         spend: a.spend + s.spend,
         conversions: a.conversions + s.conversions,
         revenue: a.revenue + s.revenue,
       }),
-      { impressions: 0, clicks: 0, spend: 0, conversions: 0, revenue: 0 },
+      { impressions: 0, clicks: 0, runs: 0, spend: 0, conversions: 0, revenue: 0 },
     );
   }, [house]);
 
-  const liveCtr = live.impressions ? live.clicks / live.impressions : 0;
   const liveRoas = live.spend ? live.revenue / live.spend : 0;
 
   function openExchange() {
@@ -80,12 +80,13 @@ function Home() {
       }
     >
       <p className="mb-6 max-w-2xl text-sm leading-relaxed text-muted">
-        A live CPC exchange tied to the open web. House advertiser is{" "}
+        Google sells a click. ChatGPT sells a chat — both inside their walls. This exchange sells a{" "}
+        <span className="text-fg">completed job of the SKU, on the page they are reading</span>. Humans
+        tap Run it on this page. Agents POST the task. Same book. House advertiser is{" "}
         <a href="https://multinicheai.com" className="text-fg underline-offset-2 hover:underline">
           multinicheai.com
         </a>
-        . Paste the tag from Inventory on any site — including the store — and the same auction
-        fills the slot. Pause, raise a bid, and the next pageview uses it.
+        . You are not buying Google inventory.
       </p>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -99,10 +100,10 @@ function Home() {
         <Kpi
           label="Impressions"
           value={formatCompact(live.impressions)}
-          hint={`${live.clicks} clicks`}
+          hint={`${live.clicks} clicks · ${live.runs} spec runs`}
           className="rise-2"
         />
-        <Kpi label="CTR" value={formatPct(liveCtr)} hint="House campaigns" className="rise-3" />
+        <Kpi label="Run rate" value={formatPct(live.impressions ? live.runs / live.impressions : 0)} hint="They ran the SKU on the page" className="rise-3" />
         <Kpi
           label="ROAS"
           value={liveRoas ? `${liveRoas.toFixed(1)}x` : "—"}
@@ -117,7 +118,7 @@ function Home() {
             <div>
               <h2 className="font-display text-xl">Auction tape</h2>
               <p className="text-sm text-muted">
-                Second-price CPC · quality × bid. Not Google’s inventory.
+                Second-price · bid × quality. Billable event is a page-native spec run.
               </p>
             </div>
             <div className="flex gap-2">
@@ -145,17 +146,17 @@ function Home() {
           </CardHeader>
           <CardBody className="space-y-3 text-sm leading-relaxed text-muted">
             <p>
-              1. Campaigns bid a CPC. Quality is overlap between targeting and the publisher (or the
-              Findr query).
+              1. Each campaign carries a spec — the first prompt of the SKU. Quality is overlap
+              with the publisher (or the Findr query). Specs outrank banners.
             </p>
             <p>
-              2. Highest bid × quality wins. Winner pays just above the second rank — Google-style,
-              on this network.
+              2. Highest bid × quality wins. The unit does not chat about the product. It{" "}
+              <span className="text-fg">runs the product on this page</span>. Agents POST a task to{" "}
+              <code className="text-fg">/api/ads/run</code> and get the same job back as JSON.
             </p>
             <p>
-              3. Paste the Inventory tag on any page — multinicheai.com, a newsletter, a blog.
-              That pageview hits this same server. Click goes through the exchange, then to the
-              destination.
+              3. A run bills a slice of CPC and they keep the spec. A click still 302s to
+              multinicheai.com. Tape traffic is bound, not live, so it does not spend the desk.
             </p>
             <p>
               Pause Deep Work, raise Agent Studio’s bid, or resume Code Review Digest — the next

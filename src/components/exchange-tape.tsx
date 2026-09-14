@@ -59,6 +59,7 @@ export function ExchangeTape({
               <p className="text-[10px] tabular-nums text-subtle">
                 {won ? `q ${e.quality.toFixed(2)}` : ""}
                 {e.clicked ? " · clk" : ""}
+                {e.ran ? " · run" : ""}
               </p>
             </div>
           </li>

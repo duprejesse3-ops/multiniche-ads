@@ -82,6 +82,7 @@ export function AppShell({
             multinicheai.com
           </a>
           .
+          <span className="mt-2 block">© 2026 MULTINICHE AI. All rights reserved.</span>
         </p>
       </aside>
 
@@ -93,7 +94,7 @@ export function AppShell({
       </header>
 
       <main className="md:pl-56">
-        <div className="mx-auto max-w-6xl px-4 pb-28 pt-6 md:px-8 md:pb-12 md:pt-8">
+        <div className="mx-auto min-w-0 max-w-6xl overflow-x-hidden px-4 pb-28 pt-6 md:px-8 md:pb-12 md:pt-8">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div>
               {eyebrow ? (

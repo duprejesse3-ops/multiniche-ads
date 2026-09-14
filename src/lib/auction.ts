@@ -1,12 +1,13 @@
 import type { Publisher, Slot } from "./network";
 import type { AdCreative, AuctionEvent, Campaign, DailyStat, Platform, RivalBid } from "./types";
+import { runPrice } from "./proof";
 
 export function todayISO(now = new Date()) {
   return now.toISOString().slice(0, 10);
 }
 
 export function emptyDay(date: string): DailyStat {
-  return { date, impressions: 0, clicks: 0, spend: 0, conversions: 0, revenue: 0 };
+  return { date, impressions: 0, clicks: 0, runs: 0, spend: 0, conversions: 0, revenue: 0 };
 }
 
 export function spendOnDate(c: Campaign, date: string) {
@@ -24,6 +25,7 @@ function haystack(c: Campaign) {
     c.name,
     c.strategy,
     c.brand,
+    c.proof?.spec ?? "",
     ...c.audiences.flatMap((a) => [a.name, a.description, ...a.tags]),
   ]
     .join(" ")
@@ -54,7 +56,8 @@ export function qualityScore(campaign: Campaign, publisher: Publisher, query?: s
   const qScore = q ? queryFit(campaign, query) : 0.5;
   const queryWeight = q ? 0.6 : 0;
   const raw = tagScore * (1 - queryWeight) + qScore * queryWeight;
-  return Math.round((0.32 + raw * 0.68) * 100) / 100;
+  const proofBoost = campaign.proof?.spec ? 0.06 : 0;
+  return Math.round(Math.min(1, 0.32 + raw * 0.68 + proofBoost) * 100) / 100;
 }
 
 export function pickCreative(campaign: Campaign, format: Platform): AdCreative | null {
@@ -70,6 +73,11 @@ function unit(seed: string) {
 export function clickProbability(format: Platform, quality: number) {
   const base = format === "search" ? 0.055 : format === "social" ? 0.014 : format === "video" ? 0.02 : 0.009;
   return Math.min(0.14, Math.max(0.003, base * (quality / 0.65)));
+}
+
+export function runProbability(format: Platform, quality: number) {
+  const base = format === "search" ? 0.07 : format === "social" ? 0.028 : 0.022;
+  return Math.min(0.18, Math.max(0.008, base * (quality / 0.65)));
 }
 
 export function conversionProbability(campaign: Campaign, quality: number) {
@@ -180,12 +188,30 @@ export function runAuction(opts: {
   };
 }
 
-export function applyImpression(campaign: Campaign, date: string): Campaign {
+function bumpDay(
+  campaign: Campaign,
+  date: string,
+  patch: Partial<DailyStat>,
+): Campaign {
   const stats = campaign.stats.slice();
   const i = stats.findIndex((s) => s.date === date);
-  if (i === -1) stats.push({ ...emptyDay(date), impressions: 1 });
-  else stats[i] = { ...stats[i], impressions: stats[i].impressions + 1 };
+  const base = i === -1 ? emptyDay(date) : { ...emptyDay(date), ...stats[i], runs: stats[i].runs ?? 0 };
+  const next: DailyStat = {
+    ...base,
+    impressions: base.impressions + (patch.impressions ?? 0),
+    clicks: base.clicks + (patch.clicks ?? 0),
+    runs: base.runs + (patch.runs ?? 0),
+    spend: Math.round((base.spend + (patch.spend ?? 0)) * 100) / 100,
+    conversions: base.conversions + (patch.conversions ?? 0),
+    revenue: Math.round((base.revenue + (patch.revenue ?? 0)) * 100) / 100,
+  };
+  if (i === -1) stats.push(next);
+  else stats[i] = next;
   return { ...campaign, stats };
+}
+
+export function applyImpression(campaign: Campaign, date: string): Campaign {
+  return bumpDay(campaign, date, { impressions: 1 });
 }
 
 export function applyClick(
@@ -194,29 +220,27 @@ export function applyClick(
   price: number,
   converted: boolean,
 ): Campaign {
-  const stats = campaign.stats.slice();
-  const i = stats.findIndex((s) => s.date === date);
-  const conv = converted ? 1 : 0;
-  const rev = converted ? campaign.aov : 0;
-  if (i === -1) {
-    stats.push({
-      ...emptyDay(date),
-      clicks: 1,
-      spend: price,
-      conversions: conv,
-      revenue: rev,
-    });
-  } else {
-    const s = stats[i];
-    stats[i] = {
-      ...s,
-      clicks: s.clicks + 1,
-      spend: Math.round((s.spend + price) * 100) / 100,
-      conversions: s.conversions + conv,
-      revenue: Math.round((s.revenue + rev) * 100) / 100,
-    };
-  }
-  return { ...campaign, stats };
+  return bumpDay(campaign, date, {
+    clicks: 1,
+    spend: price,
+    conversions: converted ? 1 : 0,
+    revenue: converted ? campaign.aov : 0,
+  });
+}
+
+export function applyRun(
+  campaign: Campaign,
+  date: string,
+  eventPrice: number,
+  converted: boolean,
+): Campaign {
+  const price = runPrice(eventPrice, campaign.cpcBid);
+  return bumpDay(campaign, date, {
+    runs: 1,
+    spend: price,
+    conversions: converted ? 1 : 0,
+    revenue: converted ? campaign.aov : 0,
+  });
 }
 
 export function shouldSimulateClick(event: AuctionEvent) {
@@ -224,8 +248,14 @@ export function shouldSimulateClick(event: AuctionEvent) {
   return unit(event.id + "clk") < clickProbability(event.format, event.quality);
 }
 
+export function shouldSimulateRun(event: AuctionEvent, hasProof: boolean) {
+  if (event.outcome !== "won" || !hasProof) return false;
+  return unit(event.id + "run") < runProbability(event.format, event.quality);
+}
+
 export function shouldConvert(campaign: Campaign, event: AuctionEvent) {
-  return unit(event.id + "cv") < conversionProbability(campaign, event.quality);
+  const bonus = event.ran ? 1.65 : 1;
+  return unit(event.id + "cv") < conversionProbability(campaign, event.quality) * bonus;
 }
 
 export function suggestedBid(platforms: Platform[], dailyBudget: number) {

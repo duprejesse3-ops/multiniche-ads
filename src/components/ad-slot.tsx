@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { formatMoney } from "@/lib/format";
 import type { Publisher, Slot } from "@/lib/network";
 import { useDesk } from "@/lib/store";
-import type { AdCreative, AuctionEvent, Campaign } from "@/lib/types";
+import type { AdCreative, AuctionEvent, Campaign, Proof } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type Fill = {
@@ -13,6 +13,8 @@ type Fill = {
   campaign: Campaign | null;
   creative: AdCreative | null;
   clickUrl: string;
+  runUrl: string;
+  proof: Proof | null;
   brand: string;
   headline: string;
   subhead: string;
@@ -91,6 +93,7 @@ export function AdSlot({
     aov: 0,
     strategy: "",
     targeting: "",
+    proof: fill.proof ?? undefined,
     creatives: [creative],
     audiences: [],
     stats: [],
@@ -103,9 +106,15 @@ export function AdSlot({
       campaign={campaignStub}
       creative={creative}
       href={fill.clickUrl}
+      runUrl={fill.runUrl}
+      proof={fill.proof ?? campaignStub.proof ?? null}
       className={className}
       onClick={() => {
         toast.message(`Click billed ${formatMoney(fill.price, 2)} · ${fill.brand}`);
+      }}
+      onRan={(patch) => {
+        applyServe(patch);
+        toast.message("Spec ran on this page.");
       }}
     />
   );
@@ -128,14 +137,20 @@ function ServedAd({
   campaign,
   creative,
   href,
+  runUrl,
+  proof,
   onClick,
+  onRan,
   className,
 }: {
   event: AuctionEvent;
   campaign: Campaign;
   creative: AdCreative;
   href: string;
+  runUrl: string;
+  proof: Proof | null;
   onClick: () => void;
+  onRan: (patch: { event: AuctionEvent; campaign: Campaign | null }) => void;
   className?: string;
 }) {
   const format = event.format;
@@ -149,15 +164,114 @@ function ServedAd({
     );
 
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={cn("block text-left transition-opacity duration-150 hover:opacity-95", className)}
-      onClick={onClick}
-    >
+    <div className={cn("text-left", className)}>
       {inner}
-    </a>
+      {proof ? <ProofRun proof={proof} runUrl={runUrl} eventId={event.id} onRan={onRan} /> : null}
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-2 inline-flex h-11 items-center text-sm text-fg underline-offset-2 hover:underline"
+        onClick={onClick}
+      >
+        {creative.cta} →
+      </a>
+    </div>
+  );
+}
+
+function pageTask() {
+  if (typeof document === "undefined") return { title: "", url: "", excerpt: "" };
+  const node = document.querySelector("article") ?? document.querySelector("main") ?? document.body;
+  const excerpt = (node?.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 700);
+  return {
+    title: document.title.slice(0, 160),
+    url: location.href.slice(0, 400),
+    excerpt,
+  };
+}
+
+function ProofRun({
+  proof,
+  runUrl,
+  eventId,
+  onRan,
+}: {
+  proof: Proof;
+  runUrl: string;
+  eventId: string;
+  onRan: (patch: { event: AuctionEvent; campaign: Campaign | null }) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [output, setOutput] = useState<string | null>(null);
+  const [live, setLive] = useState(false);
+  const [kept, setKept] = useState(false);
+
+  async function run() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const res = await fetch(runUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ e: eventId, ...pageTask() }),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        output?: string;
+        sample?: string;
+        live?: boolean;
+        event?: AuctionEvent;
+        campaign?: Campaign | null;
+      };
+      const text = data.output || data.sample;
+      if (!data?.ok || !text) {
+        setBusy(false);
+        return;
+      }
+      setOutput(text);
+      setLive(Boolean(data.live));
+      setOpen(true);
+      if (data.event) onRan({ event: data.event, campaign: data.campaign ?? null });
+    } catch {
+      /* remnant stays closed */
+    }
+    setBusy(false);
+  }
+
+  return (
+    <div className="mt-3 rounded-md border border-border bg-raised/50 px-3 py-3">
+      <p className="text-[10px] uppercase tracking-[0.16em] text-subtle">Spec · run on this page</p>
+      {!open ? (
+        <button
+          type="button"
+          onClick={() => void run()}
+          className="mt-2 inline-flex h-11 items-center rounded-sm bg-primary px-3 text-xs font-medium text-primary-fg"
+        >
+          {busy ? "Running on this page…" : "Run it on this page"}
+        </button>
+      ) : (
+        <div className="mt-2 space-y-2">
+          <p className="text-[10px] uppercase tracking-[0.16em] text-subtle">
+            {live ? "Ran on this page" : "Bound to this page"}
+          </p>
+          <p className="text-sm leading-relaxed text-fg whitespace-pre-wrap">{output}</p>
+          <button
+            type="button"
+            className="inline-flex h-11 items-center text-xs text-fg underline-offset-2 hover:underline"
+            onClick={() => {
+              void navigator.clipboard.writeText(proof.spec);
+              setKept(true);
+            }}
+          >
+            {kept ? "Spec copied" : "Keep this spec"}
+          </button>
+          <p className="font-mono text-[11px] leading-relaxed text-muted">{proof.spec}</p>
+          <p className="text-[11px] text-subtle">{proof.license}</p>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -166,9 +280,8 @@ function SearchUnit({ creative, campaign }: { creative: AdCreative; campaign: Ca
   return (
     <div className="rounded-lg border border-border bg-bg px-4 py-3">
       <p className="text-[11px] text-subtle">Sponsored · {host}</p>
-      <p className="mt-1 font-medium text-fg underline-offset-2">{creative.headline}</p>
+      <p className="mt-1 font-medium text-fg">{creative.headline}</p>
       <p className="mt-1 text-sm text-muted">{creative.body}</p>
-      <p className="mt-2 text-xs text-subtle">{creative.cta} →</p>
     </div>
   );
 }
@@ -181,7 +294,7 @@ function SocialUnit({ creative, campaign }: { creative: AdCreative; campaign: Ca
           <div className="size-6 rounded-full bg-raised ring-1 ring-border" />
           <div>
             <p className="text-xs font-medium">{campaign.brand}</p>
-            <p className="text-[10px] text-subtle">Sponsored</p>
+            <p className="text-[10px] text-subtle">Sponsored spec</p>
           </div>
         </div>
         <span className="text-[10px] uppercase tracking-[0.14em] text-subtle">Ads</span>
@@ -196,9 +309,6 @@ function SocialUnit({ creative, campaign }: { creative: AdCreative; campaign: Ca
       <div className="px-3 py-3">
         <p className="text-sm font-medium leading-snug">{creative.headline}</p>
         <p className="mt-1 text-sm text-muted">{creative.body}</p>
-        <div className="mt-3 flex h-9 items-center justify-center rounded-sm bg-primary text-xs font-medium text-primary-fg">
-          {creative.cta}
-        </div>
       </div>
     </div>
   );
@@ -214,14 +324,9 @@ function DisplayUnit({ creative, campaign }: { creative: AdCreative; campaign: C
           <p className="font-display text-lg leading-tight md:text-xl">{creative.headline}</p>
         </div>
       )}
-      <div className="flex items-center justify-between gap-3 px-3 py-2.5">
-        <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-[0.14em] text-subtle">{campaign.brand}</p>
-          <p className="truncate text-sm font-medium">{creative.subhead || creative.cta}</p>
-        </div>
-        <span className="shrink-0 rounded-sm bg-primary px-3 py-1.5 text-xs font-medium text-primary-fg">
-          {creative.cta}
-        </span>
+      <div className="px-3 py-2.5">
+        <p className="text-[10px] uppercase tracking-[0.14em] text-subtle">{campaign.brand}</p>
+        <p className="truncate text-sm font-medium">{creative.subhead || creative.headline}</p>
       </div>
     </div>
   );

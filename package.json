@@ -1,6 +1,8 @@
 {
-  "name": "app-builder-workspace",
+  "name": "multiniche-ads",
   "private": true,
+  "license": "UNLICENSED",
+  "author": "MULTINICHE AI (https://multinicheai.com)",
   "sideEffects": false,
   "type": "module",
   "overrides": {

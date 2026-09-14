@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { asFormat, corsPreflight, requestOrigin, withCors } from "@/lib/ads-http";
 
-export const Route = createFileRoute("/api/ads/serve")({
+export const Route = createFileRoute("/api/ads/offer")({
   server: {
     handlers: {
       OPTIONS: async () => corsPreflight(),
@@ -16,11 +16,11 @@ export const Route = createFileRoute("/api/ads/serve")({
           .filter(Boolean);
         const result = await serveAd({
           publisherId: url.searchParams.get("publisher") ?? undefined,
-          host: url.searchParams.get("site") ?? undefined,
-          tags: tags.length ? tags : undefined,
-          slotId: url.searchParams.get("slot") || "s_web_display",
+          host: url.searchParams.get("site") ?? url.searchParams.get("agent") ?? "agent.local",
+          tags: tags.length ? tags : ["founders", "productivity", "chatgpt", "ops"],
+          slotId: url.searchParams.get("slot") || "s_agent_offer",
           format: asFormat(url.searchParams.get("format")),
-          pageviewId: url.searchParams.get("pageview") || `pv_${Date.now().toString(36)}`,
+          pageviewId: url.searchParams.get("pageview") || `ag_${Date.now().toString(36)}`,
           query: url.searchParams.get("q") ?? undefined,
           pageUrl: url.searchParams.get("url") ?? undefined,
           origin,
@@ -28,27 +28,14 @@ export const Route = createFileRoute("/api/ads/serve")({
         return withCors(
           Response.json({
             ok: true,
+            protocol: "multiniche-ads/1",
             fill: result.event.outcome === "won",
             eventId: result.event.id,
-            format: result.event.format,
-            brand: result.campaign?.brand ?? result.event.brand ?? "",
-            headline: result.creative?.headline ?? result.event.headline ?? "",
-            subhead: result.creative?.subhead ?? "",
-            body: result.creative?.body ?? "",
-            cta: result.creative?.cta ?? "Learn more",
-            imageUrl: result.creative?.imageUrl ?? null,
-            owned: result.campaign?.owned ?? false,
-            host: result.campaign?.owned
-              ? "multinicheai.com"
-              : (result.event.siteHost ?? ""),
-            price: result.event.price,
             quality: result.event.quality,
-            clickUrl: result.clickUrl,
-            runUrl: result.runUrl,
-            proof: result.campaign?.proof ?? null,
+            auctionPrice: result.event.price,
             offer: result.offer,
-            event: result.event,
-            campaign: result.campaign,
+            runUrl: result.runUrl,
+            clickUrl: result.clickUrl,
           }),
         );
       },

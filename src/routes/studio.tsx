@@ -29,7 +29,7 @@ function StudioPage() {
   const [brand, setBrand] = useState<string>(STORE.name);
   const [product, setProduct] = useState(CATALOG[0].name);
   const [notes, setNotes] = useState(
-    "Spec sheet, not a pitch. Watch it run on your own task. One-time. Claude, ChatGPT, Gemini.",
+    "Spec sheet, not a pitch. Run it on the page they are reading. One-time. Claude, ChatGPT, Gemini.",
   );
   const [format, setFormat] = useState<Platform>("social");
   const [tone, setTone] = useState<(typeof TONES)[number]>("restrained");

@@ -21,6 +21,14 @@ const SaveInput = z.object({
   audiences: z.array(z.any()),
   stats: z.array(z.any()),
   createdAt: z.string(),
+  proof: z
+    .object({
+      sku: z.string(),
+      spec: z.string(),
+      sample: z.string(),
+      license: z.string(),
+    })
+    .optional(),
 });
 
 const ServeInput = z.object({
@@ -65,4 +73,25 @@ export const serveAdFn = createServerFn({ method: "POST" })
     const { serveAd } = await import("./exchange.server");
     const { origin, ...rest } = data;
     return serveAd({ ...rest, format: rest.format as Platform, origin });
+  });
+
+export const runAdFn = createServerFn({ method: "POST" })
+  .validator((input: { eventId: string; title?: string; url?: string; excerpt?: string; live?: boolean }) =>
+    z
+      .object({
+        eventId: z.string().min(1),
+        title: z.string().optional(),
+        url: z.string().optional(),
+        excerpt: z.string().optional(),
+        live: z.boolean().optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { runAd } = await import("./exchange.server");
+    const { clipTask } = await import("./proof");
+    return runAd(data.eventId, {
+      live: data.live,
+      task: clipTask({ title: data.title, url: data.url, excerpt: data.excerpt }),
+    });
   });
