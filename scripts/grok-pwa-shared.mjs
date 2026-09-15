@@ -109,11 +109,26 @@ export function publicAppHost(hostHeader) {
  * deployer injects). Live preview has no such env, so fall back to the
  * request host / X-Forwarded-Host. Never prefer request Host on a published
  * app — Envoy rewrites it to `*.vercel.app`.
+ *
+ * An explicit VITE_PUBLIC_HOSTNAME bypasses the *.vercel.app rejection that
+ * publicAppHost() applies to the request-host fallback: that rejection
+ * exists because Envoy's rewritten request Host is an internal artifact, not
+ * a real domain a deployer chose. A deployer who sets VITE_PUBLIC_HOSTNAME
+ * themselves has made a deliberate choice — including a real production app
+ * hosted directly on a clean *.vercel.app subdomain (no custom domain
+ * involved), which is otherwise indistinguishable from Vercel's internal
+ * hosts by hostname shape alone.
  */
 export function resolvePublicHost(hostHeader) {
-  return (
-    publicAppHost(process.env?.VITE_PUBLIC_HOSTNAME) || publicAppHost(hostHeader)
-  );
+  const explicit = String(process.env?.VITE_PUBLIC_HOSTNAME ?? "")
+    .split(",")[0]
+    .trim()
+    .split(":")[0]
+    .toLowerCase();
+  if (explicit && /^[a-z0-9.-]+$/.test(explicit) && explicit.includes(".")) {
+    return explicit;
+  }
+  return publicAppHost(hostHeader);
 }
 
 export function isInstallQuery(url) {
@@ -432,6 +447,9 @@ export function injectGrokPwaHead(html, ctx = {}) {
     host,
     documentTitle,
   );
+  // og:image is gated on resolvePublicHost(); see there for how a real
+  // production domain that happens to be *.vercel.app now gets through.
+
   let next = stripShareMetaTags(html);
 
   const missing = grokPwaHeadTags(appName)
