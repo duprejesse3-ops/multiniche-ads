@@ -47,6 +47,15 @@ export function ExchangeTape({
                     No fill · {pub?.name ?? e.siteHost ?? e.publisherId}
                   </span>
                 )}
+                {e.simulated ? (
+                  <span className="ml-2 rounded-sm bg-raised px-1 py-0.5 text-[9px] uppercase tracking-wide text-subtle">
+                    sim
+                  </span>
+                ) : (
+                  <span className="ml-2 rounded-sm bg-success/15 px-1 py-0.5 text-[9px] uppercase tracking-wide text-success">
+                    real
+                  </span>
+                )}
               </p>
               {won && e.headline ? (
                 <p className="truncate text-xs text-subtle">{e.headline}</p>
