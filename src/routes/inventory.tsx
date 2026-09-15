@@ -45,6 +45,28 @@ function InventoryPage() {
       </p>
 
       <Card className="mb-8">
+        <CardHeader>
+          <h2 className="font-display text-xl">Agent protocol</h2>
+          <p className="text-sm text-muted">
+            ChatGPT and Google keep ads inside their apps. An agent on the open web auctions here,
+            then POSTs its own task. The SKU runs on that task. They keep the spec.
+          </p>
+        </CardHeader>
+        <CardBody>
+          <pre className="overflow-x-auto rounded-md border border-border bg-raised p-4 text-xs leading-relaxed text-muted">
+            {`GET ${origin || "https://your-exchange.example"}/api/ads/offer?q=deep+work+prompts&site=agent.local
+POST ${origin || "https://your-exchange.example"}/api/ads/run
+{ "e": "<eventId>", "title": "my job", "excerpt": "the work to run the spec on" }
+GET ${origin || "https://your-exchange.example"}/llms.txt`}
+          </pre>
+          <p className="mt-3 text-xs leading-relaxed text-subtle">
+            Response is a SpecOffer with acceptsTask. POST the page (or any job) to runUrl. A run
+            bills once. Humans tap Run it on this page. They can keep the spec.
+          </p>
+        </CardBody>
+      </Card>
+
+      <Card className="mb-8">
         <CardHeader className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="font-display text-xl">Open-web tag</h2>
@@ -77,28 +99,6 @@ function InventoryPage() {
             <code className="text-muted">data-format</code> is display, social, or search.{" "}
             <code className="text-muted">data-tags</code> steers quality. Add as many{" "}
             <code className="text-muted">data-mn-ad</code> nodes as you have slots; one script.
-          </p>
-        </CardBody>
-      </Card>
-
-      <Card className="mb-8">
-        <CardHeader>
-          <h2 className="font-display text-xl">Agent protocol</h2>
-          <p className="text-sm text-muted">
-            ChatGPT and Google keep ads inside their apps. An agent on the open web auctions here,
-            then POSTs its own task. The SKU runs on that task. They keep the spec.
-          </p>
-        </CardHeader>
-        <CardBody>
-          <pre className="overflow-x-auto rounded-md border border-border bg-raised p-4 text-xs leading-relaxed text-muted">
-            {`GET ${origin || "https://your-exchange.example"}/api/ads/offer?q=deep+work+prompts&site=agent.local
-POST ${origin || "https://your-exchange.example"}/api/ads/run
-{ "e": "<eventId>", "title": "my job", "excerpt": "the work to run the spec on" }
-GET ${origin || "https://your-exchange.example"}/llms.txt`}
-          </pre>
-          <p className="mt-3 text-xs leading-relaxed text-subtle">
-            Response is a SpecOffer with acceptsTask. POST the page (or any job) to runUrl. A run
-            bills once. Humans tap Run it on this page. They can keep the spec.
           </p>
         </CardBody>
       </Card>

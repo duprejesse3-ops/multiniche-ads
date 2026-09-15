@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
+import { todayISO } from "@/lib/auction";
 import { PenLine, Play, Radio, Square } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -60,6 +61,15 @@ function Home() {
     }
   }
 
+  const today = todayISO();
+  const agentRunsToday = useMemo(
+    () =>
+      tape.filter(
+        (e) => e.ran && e.ts.slice(0, 10) === today && (e.slotId === "s_agent_offer" || e.slotId.startsWith("s_agent")),
+      ).length,
+    [tape, today],
+  );
+
   return (
     <AppShell
       eyebrow={format(new Date(), "EEEE d MMMM")}
@@ -103,7 +113,16 @@ function Home() {
           hint={`${live.clicks} clicks · ${live.runs} spec runs`}
           className="rise-2"
         />
-        <Kpi label="Run rate" value={formatPct(live.impressions ? live.runs / live.impressions : 0)} hint="They ran the SKU on the page" className="rise-3" />
+        <Kpi
+          label="Run rate"
+          value={formatPct(live.impressions ? live.runs / live.impressions : 0)}
+          hint={
+            agentRunsToday
+              ? `${agentRunsToday} via the agent protocol`
+              : "They ran the SKU on the page"
+          }
+          className="rise-3"
+        />
         <Kpi
           label="ROAS"
           value={liveRoas ? `${liveRoas.toFixed(1)}x` : "—"}
