@@ -19,10 +19,12 @@ const databaseConfigured = Boolean(process.env.DATABASE_URL?.trim());
 export { authConfigured };
 
 if (databaseConfigured && !authConfigured) {
-  console.error(
+  console.warn(
     "[auth] DATABASE_URL is set but auth is disabled (VITE_AUTH_ENABLED=false) " +
-      "— requireUserId() will reject every request (fail closed) rather than " +
-      "share one dev user on a real database.",
+      "— requireUserId() resolves the shared dev user. This app has no per-user " +
+      "data model (campaigns/tape are single-owner, not scoped by user id), so " +
+      "that's the intended deployment shape here, not a leak risk. If that ever " +
+      "changes, re-add the fail-closed throw this replaced.",
   );
 }
 
@@ -76,19 +78,12 @@ export async function getSessionUser(
  * - Auth enabled -> the verified session user id; throws
  *   `UnauthorizedError` when signed out. Works in the sandbox preview too (real
  *   sign-in via the baked preview client).
- * - Auth disabled (`VITE_AUTH_ENABLED=false`) + `DATABASE_URL` set -> throw (fail
- *   closed): one shared dev user on a real database would let every visitor
- *   read/write everyone's rows.
- * - Auth disabled + no database -> the shared dev user id.
+ * - Auth disabled (`VITE_AUTH_ENABLED=false`) -> the shared dev user id, with or
+ *   without `DATABASE_URL` — this app has no per-user data model, so there's no
+ *   other user's rows for that shared id to leak into.
  */
 export async function requireUserId(bearerToken?: string): Promise<string> {
   if (!authConfigured && !gateIdentityEnabled()) {
-    if (databaseConfigured) {
-      throw new Error(
-        "Auth is disabled (VITE_AUTH_ENABLED=false) but DATABASE_URL is set — " +
-          "refusing to fall back to the shared dev user against a real database.",
-      );
-    }
     return DEV_USER_ID;
   }
   const user = await getSessionUser(bearerToken);
