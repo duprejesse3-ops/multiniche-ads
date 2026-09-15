@@ -110,6 +110,9 @@ export function AppShell({
           {!hydrated ? (
             <p className="mt-8 text-xs text-subtle">Loading the book from the exchange…</p>
           ) : null}
+          <p className="mt-10 text-[11px] text-subtle md:hidden">
+            © 2026 MULTINICHE AI. All rights reserved.
+          </p>
         </div>
       </main>
 
