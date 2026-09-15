@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { withCors } from "@/lib/ads-http";
 
-const BODY = `# Multiniche Ads — agent protocol
+const BODY = `# MultiNicheADS — agent protocol
 
 Google sells a click. ChatGPT sells a chat. Both stay inside their walls.
 This server sells the first completed job of a digital instrument — on the

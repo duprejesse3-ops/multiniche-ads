@@ -123,7 +123,7 @@ export function AdSlot({
 function Remnant({ className }: { className?: string }) {
   return (
     <div className={cn("rounded-md border border-dashed border-border bg-raised/40 px-4 py-5", className)}>
-      <p className="text-[10px] uppercase tracking-[0.16em] text-subtle">Unsold · Multiniche Ads</p>
+      <p className="text-[10px] uppercase tracking-[0.16em] text-subtle">Unsold · MultiNicheADS</p>
       <p className="mt-1 text-sm text-muted">This slot had no eligible bidder.</p>
       <Link to="/create" className="mt-2 inline-block text-sm text-fg underline-offset-2 hover:underline">
         Advertise here

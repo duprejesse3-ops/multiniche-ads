@@ -4,7 +4,7 @@ import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 
-const APP_NAME = "Multiniche Ads";
+const APP_NAME = "MultiNicheADS";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -14,7 +14,7 @@ export const Route = createRootRoute({
       { title: APP_NAME },
       {
         name: "description",
-        content: "Multiniche Ads — a live CPC exchange. House advertiser: multinicheai.com.",
+        content: "MultiNicheADS — a live CPC exchange. House advertiser: multinicheai.com.",
       },
       { name: "theme-color", content: "#0c0d0f" },
     ],

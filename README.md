@@ -1,4 +1,4 @@
-# Multiniche Ads
+# MultiNicheADS
 
 The open-web **page-native spec exchange** for [MULTINICHE AI](https://multinicheai.com).
 

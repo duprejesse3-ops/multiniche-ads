@@ -16,7 +16,7 @@ function Mark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden>
       <rect x="3.5" y="3.5" width="7" height="7" stroke="currentColor" strokeWidth="1.4" />
-      <rect x="13.5" y="3.5" width="7" height="7" stroke="currentColor" strokeWidth="1.4" opacity="0.45" />
+      <rect x="13.5" y="3.5" width="7" height="7" fill="currentColor" stroke="currentColor" strokeWidth="1.4" />
       <rect x="3.5" y="13.5" width="7" height="7" stroke="currentColor" strokeWidth="1.4" opacity="0.45" />
       <rect x="13.5" y="13.5" width="7" height="7" stroke="currentColor" strokeWidth="1.4" />
     </svg>
@@ -47,7 +47,7 @@ export function AppShell({
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-56 flex-col border-r border-border bg-bg md:flex">
         <Link to="/" className="flex items-center gap-2 px-5 py-6 text-fg">
           <Mark className="size-6" />
-          <span className="font-display text-xl tracking-tight">Multiniche</span>
+          <span className="font-display text-xl tracking-tight">MultiNicheADS</span>
         </Link>
         <nav className="flex flex-1 flex-col gap-1 px-3">
           {NAV.map((item) => {
@@ -89,7 +89,7 @@ export function AppShell({
       <header className="sticky top-0 z-10 flex items-center border-b border-border bg-bg/90 px-4 py-3 backdrop-blur-sm md:hidden">
         <Link to="/" className="flex items-center gap-2">
           <Mark className="size-5" />
-          <span className="font-display text-lg">Multiniche</span>
+          <span className="font-display text-lg">MultiNicheADS</span>
         </Link>
       </header>
 
