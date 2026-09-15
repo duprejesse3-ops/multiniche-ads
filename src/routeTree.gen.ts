@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AudiencesRouteImport } from './routes/audiences'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as InventoryRouteImport } from './routes/inventory'
+import { Route as JoinRouteImport } from './routes/join'
 import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as StudioRouteImport } from './routes/studio'
@@ -43,6 +44,11 @@ const CreateRoute = CreateRouteImport.update({
 const InventoryRoute = InventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinRoute = JoinRouteImport.update({
+  id: '/join',
+  path: '/join',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/audiences': typeof AudiencesRoute
   '/create': typeof CreateRoute
   '/inventory': typeof InventoryRoute
+  '/join': typeof JoinRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/search': typeof SearchRoute
   '/studio': typeof StudioRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/audiences': typeof AudiencesRoute
   '/create': typeof CreateRoute
   '/inventory': typeof InventoryRoute
+  '/join': typeof JoinRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/search': typeof SearchRoute
   '/studio': typeof StudioRoute
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/audiences': typeof AudiencesRoute
   '/create': typeof CreateRoute
   '/inventory': typeof InventoryRoute
+  '/join': typeof JoinRoute
   '/llms.txt': typeof LlmsDottxtRoute
   '/search': typeof SearchRoute
   '/studio': typeof StudioRoute
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/audiences'
     | '/create'
     | '/inventory'
+    | '/join'
     | '/llms.txt'
     | '/search'
     | '/studio'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/audiences'
     | '/create'
     | '/inventory'
+    | '/join'
     | '/llms.txt'
     | '/search'
     | '/studio'
@@ -194,6 +205,7 @@ export interface FileRouteTypes {
     | '/audiences'
     | '/create'
     | '/inventory'
+    | '/join'
     | '/llms.txt'
     | '/search'
     | '/studio'
@@ -212,6 +224,7 @@ export interface RootRouteChildren {
   AudiencesRoute: typeof AudiencesRoute
   CreateRoute: typeof CreateRoute
   InventoryRoute: typeof InventoryRoute
+  JoinRoute: typeof JoinRoute
   LlmsDottxtRoute: typeof LlmsDottxtRoute
   SearchRoute: typeof SearchRoute
   StudioRoute: typeof StudioRoute
@@ -253,6 +266,13 @@ declare module '@tanstack/react-router' {
       path: '/inventory'
       fullPath: '/inventory'
       preLoaderRoute: typeof InventoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join': {
+      id: '/join'
+      path: '/join'
+      fullPath: '/join'
+      preLoaderRoute: typeof JoinRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/llms.txt': {
@@ -340,6 +360,7 @@ const rootRouteChildren: RootRouteChildren = {
   AudiencesRoute: AudiencesRoute,
   CreateRoute: CreateRoute,
   InventoryRoute: InventoryRoute,
+  JoinRoute: JoinRoute,
   LlmsDottxtRoute: LlmsDottxtRoute,
   SearchRoute: SearchRoute,
   StudioRoute: StudioRoute,
