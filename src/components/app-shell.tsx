@@ -82,7 +82,7 @@ export function AppShell({
             multinicheai.com
           </a>
           .
-          <span className="mt-2 block">© 2026 MULTINICHE AI. All rights reserved.</span>
+          <span className="mt-2 block">©️ 2026 MULTINICHE AI. All rights reserved.</span>
         </p>
       </aside>
 
@@ -110,9 +110,9 @@ export function AppShell({
           {!hydrated ? (
             <p className="mt-8 text-xs text-subtle">Loading the book from the exchange…</p>
           ) : null}
-          <p className="mt-10 text-[11px] text-subtle md:hidden">
-            © 2026 MULTINICHE AI. All rights reserved.
-          </p>
+          <footer className="mt-16 border-t border-border pt-5 text-[11px] leading-relaxed text-subtle">
+            ©️ 2026 MULTINICHE AI. All rights reserved.
+          </footer>
         </div>
       </main>
 
