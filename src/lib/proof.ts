@@ -70,12 +70,15 @@ export function asOffer(opts: {
     sku: proof.sku,
     price: opts.campaign.aov,
     currency: "USD",
+    runCost: 0,
+    priceNote: "Running this spec is free. price is what the product costs to buy and keep.",
     license: proof.license,
-    spec: proof.spec,
     sample: proof.sample,
+    spec: proof.spec,
     destination: opts.campaign.destination,
     clickUrl: opts.clickUrl,
     runUrl: opts.runUrl,
     acceptsTask: true,
+    expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
   };
 }

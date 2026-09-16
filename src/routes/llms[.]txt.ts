@@ -15,14 +15,22 @@ House catalog: https://multinicheai.com
 GET /api/ads/offer?q={intent}&site={your-host}&tags={comma tags}
 
 Returns a SpecOffer from a second-price auction against the live book.
-Fields: brand, product, sku, price, license, spec, sample, destination,
-clickUrl, runUrl, acceptsTask.
+Fields: brand, product, sku, price, currency, runCost, priceNote, license,
+spec, sample, destination, clickUrl, runUrl, acceptsTask, expiresAt.
+
+Running the spec is free — runCost is always 0. price is what the SKU costs
+to actually buy and keep; it is not a charge for running it. The exchange
+bills the advertiser per run internally, not you. expiresAt is advisory —
+price and availability are always re-verified live when you POST runUrl, so
+an expired offer still works, a fresh GET is just the more reliable path.
 
 GET /api/ads/serve — same auction, plus human creative.
 
 ## Billable event
 
-The distinctive event is a **run on the task**, not a click.
+The distinctive event is a **run on the task**, not a click. It is free to
+run: see runCost/priceNote on the offer above. "Billed once" below refers to
+the exchange's internal billing of the advertiser, not you.
 
 POST /api/ads/run
 Content-Type: application/json

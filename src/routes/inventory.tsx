@@ -60,8 +60,9 @@ POST ${origin || "https://your-exchange.example"}/api/ads/run
 GET ${origin || "https://your-exchange.example"}/llms.txt`}
           </pre>
           <p className="mt-3 text-xs leading-relaxed text-subtle">
-            Response is a SpecOffer with acceptsTask. POST the page (or any job) to runUrl. A run
-            bills once. Humans tap Run it on this page. They can keep the spec.
+            Response is a SpecOffer with acceptsTask and runCost 0 — running it is free. POST the
+            page (or any job) to runUrl. price is what the SKU costs to buy and keep, not to run.
+            Humans tap Run it on this page. They can keep the spec.
           </p>
         </CardBody>
       </Card>

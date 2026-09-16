@@ -47,6 +47,16 @@ export type AgentOffer = {
   sku: string;
   price: number;
   currency: "USD";
+  // Running the spec (POST runUrl) is free to whoever requests it — human or
+  // agent. `price` is what the underlying product costs to actually buy and
+  // keep; it is not a cost of running this demo. The exchange bills the
+  // advertiser internally per run, not the requester. Previously the only
+  // place this was stated was prose in llms.txt ("Billed once"), sitting
+  // right after the price field with nothing to stop a reader — especially
+  // an agent parsing just this JSON, not the doc — from assuming price was
+  // what they were about to be charged.
+  runCost: 0;
+  priceNote: string;
   license: string;
   spec: string;
   sample: string;
@@ -54,6 +64,11 @@ export type AgentOffer = {
   clickUrl: string;
   runUrl: string;
   acceptsTask: true;
+  // Advisory only — a hint not to cache this offer indefinitely. Actual
+  // price and availability are always re-verified live at run time
+  // regardless of this timestamp, so an expired offer isn't rejected; a
+  // fresh GET is just the more reliable path after it passes.
+  expiresAt: string;
 };
 
 
