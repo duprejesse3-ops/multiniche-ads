@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { composeCampaign, type ComposeResult } from "@/lib/ai";
 import { CATALOG, STORE } from "@/lib/catalog";
 import { fetchStorefrontCatalog, type StorefrontProduct } from "@/lib/catalog-remote";
-import { proofFromSku } from "@/lib/proof";
+import { clipTask, proofFromSelection } from "@/lib/proof";
 import { objectiveLabel, platformLabel } from "@/lib/format";
 import { suggestedBid } from "@/lib/auction";
 import { useDesk } from "@/lib/store";
@@ -95,6 +95,16 @@ function CreatePage() {
     };
   }, [draft, previewIndex, platforms, product, brand, notes, offer]);
 
+  const previewProof = useMemo(
+    () => proofFromSelection({ skuId, remoteSku }),
+    [skuId, remoteSku],
+  );
+
+  const previewTask = useMemo(
+    () => clipTask({ title: product, url: destination, excerpt: notes || offer }),
+    [product, destination, notes, offer],
+  );
+
   async function compose() {
     if (!brand.trim() || !product.trim()) {
       toast.error("Brand and product are required.");
@@ -136,17 +146,7 @@ function CreatePage() {
       id: `a_${crypto.randomUUID().slice(0, 8)}_${i}`,
     }));
     const sku = remoteSku ? null : CATALOG.find((s) => s.id === skuId);
-    const proof: Campaign["proof"] = remoteSku
-      ? {
-          sku: remoteSku.sku,
-          spec: remoteSku.blurb,
-          sample: remoteSku.blurb,
-          license: "One-time. Yours to keep.",
-          remote: true,
-        }
-      : sku
-        ? proofFromSku(sku)
-        : undefined;
+    const proof = proofFromSelection({ skuId, remoteSku });
     const campaign: Campaign = {
       id: `c_${crypto.randomUUID().slice(0, 8)}`,
       name: draft?.name ?? `${brand} — ${product}`,
@@ -470,7 +470,12 @@ function CreatePage() {
               </CardBody>
             </Card>
           ) : (
-            <AdPreview creative={liveCreative} brand={brand || "Brand"} />
+            <AdPreview
+              creative={liveCreative}
+              brand={brand || "Brand"}
+              proof={previewProof}
+              task={previewTask}
+            />
           )}
         </div>
       </div>

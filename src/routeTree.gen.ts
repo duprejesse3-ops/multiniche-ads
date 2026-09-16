@@ -23,6 +23,7 @@ import { Route as CampaignsIdRouteImport } from './routes/campaigns.$id'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as ApiAdsClickRouteImport } from './routes/api/ads/click'
 import { Route as ApiAdsOfferRouteImport } from './routes/api/ads/offer'
+import { Route as ApiAdsPreviewRunRouteImport } from './routes/api/ads/preview-run'
 import { Route as ApiAdsRunRouteImport } from './routes/api/ads/run'
 import { Route as ApiAdsServeRouteImport } from './routes/api/ads/serve'
 
@@ -96,6 +97,11 @@ const ApiAdsOfferRoute = ApiAdsOfferRouteImport.update({
   path: '/api/ads/offer',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdsPreviewRunRoute = ApiAdsPreviewRunRouteImport.update({
+  id: '/api/ads/preview-run',
+  path: '/api/ads/preview-run',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdsRunRoute = ApiAdsRunRouteImport.update({
   id: '/api/ads/run',
   path: '/api/ads/run',
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/p/$slug': typeof PSlugRoute
   '/api/ads/click': typeof ApiAdsClickRoute
   '/api/ads/offer': typeof ApiAdsOfferRoute
+  '/api/ads/preview-run': typeof ApiAdsPreviewRunRoute
   '/api/ads/run': typeof ApiAdsRunRoute
   '/api/ads/serve': typeof ApiAdsServeRoute
 }
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/p/$slug': typeof PSlugRoute
   '/api/ads/click': typeof ApiAdsClickRoute
   '/api/ads/offer': typeof ApiAdsOfferRoute
+  '/api/ads/preview-run': typeof ApiAdsPreviewRunRoute
   '/api/ads/run': typeof ApiAdsRunRoute
   '/api/ads/serve': typeof ApiAdsServeRoute
 }
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/p/$slug': typeof PSlugRoute
   '/api/ads/click': typeof ApiAdsClickRoute
   '/api/ads/offer': typeof ApiAdsOfferRoute
+  '/api/ads/preview-run': typeof ApiAdsPreviewRunRoute
   '/api/ads/run': typeof ApiAdsRunRoute
   '/api/ads/serve': typeof ApiAdsServeRoute
 }
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/p/$slug'
     | '/api/ads/click'
     | '/api/ads/offer'
+    | '/api/ads/preview-run'
     | '/api/ads/run'
     | '/api/ads/serve'
   fileRoutesByTo: FileRoutesByTo
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/p/$slug'
     | '/api/ads/click'
     | '/api/ads/offer'
+    | '/api/ads/preview-run'
     | '/api/ads/run'
     | '/api/ads/serve'
   id:
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/p/$slug'
     | '/api/ads/click'
     | '/api/ads/offer'
+    | '/api/ads/preview-run'
     | '/api/ads/run'
     | '/api/ads/serve'
   fileRoutesById: FileRoutesById
@@ -234,6 +246,7 @@ export interface RootRouteChildren {
   PSlugRoute: typeof PSlugRoute
   ApiAdsClickRoute: typeof ApiAdsClickRoute
   ApiAdsOfferRoute: typeof ApiAdsOfferRoute
+  ApiAdsPreviewRunRoute: typeof ApiAdsPreviewRunRoute
   ApiAdsRunRoute: typeof ApiAdsRunRoute
   ApiAdsServeRoute: typeof ApiAdsServeRoute
 }
@@ -338,6 +351,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdsOfferRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ads/preview-run': {
+      id: '/api/ads/preview-run'
+      path: '/api/ads/preview-run'
+      fullPath: '/api/ads/preview-run'
+      preLoaderRoute: typeof ApiAdsPreviewRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ads/run': {
       id: '/api/ads/run'
       path: '/api/ads/run'
@@ -370,6 +390,7 @@ const rootRouteChildren: RootRouteChildren = {
   PSlugRoute: PSlugRoute,
   ApiAdsClickRoute: ApiAdsClickRoute,
   ApiAdsOfferRoute: ApiAdsOfferRoute,
+  ApiAdsPreviewRunRoute: ApiAdsPreviewRunRoute,
   ApiAdsRunRoute: ApiAdsRunRoute,
   ApiAdsServeRoute: ApiAdsServeRoute,
 }

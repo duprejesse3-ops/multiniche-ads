@@ -1,4 +1,5 @@
 import { CATALOG, type CatalogSku } from "./catalog";
+import type { StorefrontProduct } from "./catalog-remote";
 import type { AgentOffer, Campaign, PageTask, Proof } from "./types";
 
 export function proofFromSku(sku: CatalogSku): Proof {
@@ -8,6 +9,25 @@ export function proofFromSku(sku: CatalogSku): Proof {
     sample: sku.sample,
     license: sku.license,
   };
+}
+
+/** The same proof a launched campaign would get — shared so a preview run against
+ * the picked SKU can't drift from what Launch actually ships. */
+export function proofFromSelection(opts: {
+  skuId?: string;
+  remoteSku: StorefrontProduct | null;
+}): Proof | undefined {
+  if (opts.remoteSku) {
+    return {
+      sku: opts.remoteSku.sku,
+      spec: opts.remoteSku.blurb,
+      sample: opts.remoteSku.blurb,
+      license: "One-time. Yours to keep.",
+      remote: true,
+    };
+  }
+  const sku = opts.skuId ? CATALOG.find((s) => s.id === opts.skuId) : undefined;
+  return sku ? proofFromSku(sku) : undefined;
 }
 
 export function findSkuForCampaign(c: Campaign): CatalogSku | undefined {
