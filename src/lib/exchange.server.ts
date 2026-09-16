@@ -40,10 +40,10 @@ function asSlot(format: Platform, slotId: string): Slot {
   };
 }
 
-function pack(origin: string, eventId: string, campaign: Campaign | null) {
+async function pack(origin: string, eventId: string, campaign: Campaign | null) {
   const clickUrl = `${origin}/api/ads/click?e=${encodeURIComponent(eventId)}`;
   const runUrl = `${origin}/api/ads/run?e=${encodeURIComponent(eventId)}`;
-  const withProof = campaign ? attachProof(campaign) : null;
+  const withProof = campaign ? await attachProof(campaign) : null;
   return {
     clickUrl,
     runUrl,
@@ -85,7 +85,7 @@ export async function ensureSeeded() {
   const sql = await getSql();
   const rows = await sql<{ n: number }>`select count(*)::int as n from campaigns`;
   if ((rows[0]?.n ?? 0) > 0) return;
-  for (const c of seedCampaigns()) {
+  for (const c of await seedCampaigns()) {
     await sql.query(
       `insert into campaigns (id, body, updated_at) values ($1, $2::jsonb, now())
        on conflict (id) do nothing`,
@@ -100,7 +100,7 @@ export async function listCampaigns(): Promise<Campaign[]> {
   const rows = await sql<{ id: string; body: unknown }>`
     select id, body from campaigns
   `;
-  const list = rows.map((r) => attachProof(parseBody<Campaign>(r.body)));
+  const list = await Promise.all(rows.map((r) => attachProof(parseBody<Campaign>(r.body))));
   list.sort((a, b) => (a.owned === b.owned ? 0 : a.owned ? -1 : 1));
   return list;
 }
@@ -173,7 +173,7 @@ async function findCampaign(id: string): Promise<Campaign | null> {
   const rows = await sql<{ body: unknown }>`
     select body from campaigns where id = ${id} limit 1
   `;
-  return rows[0] ? attachProof(parseBody<Campaign>(rows[0].body)) : null;
+  return rows[0] ? await attachProof(parseBody<Campaign>(rows[0].body)) : null;
 }
 
 async function touchSite(publisher: Publisher) {
@@ -223,7 +223,7 @@ export async function serveAd(opts: {
       event: existing,
       campaign,
       creative,
-      ...pack(opts.origin, existing.id, campaign),
+      ...(await pack(opts.origin, existing.id, campaign)),
     };
   }
 
@@ -286,7 +286,7 @@ export async function serveAd(opts: {
     event,
     campaign,
     creative,
-    ...pack(opts.origin, event.id, campaign),
+    ...(await pack(opts.origin, event.id, campaign)),
   };
 }
 
@@ -353,13 +353,31 @@ export async function runAd(
     };
   }
 
-  const { executeSpec } = await import("./execute-spec.server");
-  const exec = await executeSpec({
-    spec: campaign.proof.spec,
-    sample: campaign.proof.sample,
-    task,
-    live: Boolean(opts?.live) && !opts?.simulated,
-  });
+  const wantsLive = Boolean(opts?.live) && !opts?.simulated;
+  let exec: { output: string; live: boolean };
+  if (campaign.proof.remote) {
+    // This SKU has no local prompt to execute — campaign.proof.spec here is
+    // just descriptive text (see the `remote` field's doc comment on Proof).
+    // Delegate the actual run to the storefront's own, already-tested demo
+    // engine instead.
+    const bound = bindSpec(campaign.proof.sample, task);
+    if (!wantsLive) {
+      exec = { output: bound, live: false };
+    } else {
+      const { fetchStorefrontDemo } = await import("./catalog-remote");
+      const scenario = task.excerpt || task.title;
+      const result = await fetchStorefrontDemo({ sku: campaign.proof.sku, scenario });
+      exec = result.ok ? { output: result.output, live: true } : { output: bound, live: false };
+    }
+  } else {
+    const { executeSpec } = await import("./execute-spec.server");
+    exec = await executeSpec({
+      spec: campaign.proof.spec,
+      sample: campaign.proof.sample,
+      task,
+      live: wantsLive,
+    });
+  }
 
   const marked = { ...event, ran: true };
   const converted = shouldConvert(campaign, marked);

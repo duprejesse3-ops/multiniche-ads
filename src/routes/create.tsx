@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { AdPreview } from "@/components/ad-preview";
 import { AppShell } from "@/components/app-shell";
@@ -10,6 +10,7 @@ import { Input, Textarea } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { composeCampaign, type ComposeResult } from "@/lib/ai";
 import { CATALOG, STORE } from "@/lib/catalog";
+import { fetchStorefrontCatalog, type StorefrontProduct } from "@/lib/catalog-remote";
 import { proofFromSku } from "@/lib/proof";
 import { objectiveLabel, platformLabel } from "@/lib/format";
 import { suggestedBid } from "@/lib/auction";
@@ -30,6 +31,9 @@ function CreatePage() {
   const upsert = useDesk((s) => s.upsertCampaign);
 
   const [skuId, setSkuId] = useState(DEFAULT.id);
+  const [remoteSku, setRemoteSku] = useState<StorefrontProduct | null>(null);
+  const [storefront, setStorefront] = useState<StorefrontProduct[]>([]);
+  const [productSearch, setProductSearch] = useState("");
   const [brand, setBrand] = useState<string>(STORE.name);
   const [product, setProduct] = useState(DEFAULT.name);
   const [offer, setOffer] = useState(DEFAULT.offer);
@@ -42,6 +46,25 @@ function CreatePage() {
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState<ComposeResult | null>(null);
   const [previewIndex, setPreviewIndex] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchStorefrontCatalog().then((products) => {
+      if (!cancelled) setStorefront(products);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const flagshipIds = useMemo(() => new Set(CATALOG.map((s) => s.id)), []);
+  const otherProducts = useMemo(() => {
+    const q = productSearch.trim().toLowerCase();
+    return storefront
+      .filter((p) => !flagshipIds.has(p.sku))
+      .filter((p) => !q || p.name.toLowerCase().includes(q) || p.blurb.toLowerCase().includes(q))
+      .slice(0, 30);
+  }, [storefront, flagshipIds, productSearch]);
 
   function togglePlatform(p: Platform) {
     setPlatforms((cur) => {
@@ -112,7 +135,18 @@ function CreatePage() {
       ...a,
       id: `a_${crypto.randomUUID().slice(0, 8)}_${i}`,
     }));
-    const sku = CATALOG.find((s) => s.id === skuId);
+    const sku = remoteSku ? null : CATALOG.find((s) => s.id === skuId);
+    const proof: Campaign["proof"] = remoteSku
+      ? {
+          sku: remoteSku.sku,
+          spec: remoteSku.blurb,
+          sample: remoteSku.blurb,
+          license: "One-time. Yours to keep.",
+          remote: true,
+        }
+      : sku
+        ? proofFromSku(sku)
+        : undefined;
     const campaign: Campaign = {
       id: `c_${crypto.randomUUID().slice(0, 8)}`,
       name: draft?.name ?? `${brand} — ${product}`,
@@ -125,8 +159,8 @@ function CreatePage() {
       cpcBid,
       destination: destination.trim() || STORE.href,
       owned: true,
-      aov: sku?.price ?? 19,
-      proof: sku ? proofFromSku(sku) : undefined,
+      aov: remoteSku?.price ?? sku?.price ?? 19,
+      proof,
       strategy: draft?.strategy ?? (notes.trim() || "Launched from a brief; refine in flight."),
       targeting: draft?.targeting ?? "Open prospecting pending first-party signals.",
       creatives,
@@ -163,6 +197,7 @@ function CreatePage() {
                         type="button"
                         onClick={() => {
                           setSkuId(sku.id);
+                          setRemoteSku(null);
                           setBrand(STORE.name);
                           setProduct(sku.name);
                           setOffer(sku.offer);
@@ -184,6 +219,51 @@ function CreatePage() {
                       </button>
                     );
                   })}
+                </div>
+              </div>
+              <div>
+                <Label className="mb-2">
+                  More from multinicheai.com{storefront.length ? ` (${storefront.length - flagshipIds.size})` : ""}
+                </Label>
+                <Input
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  placeholder="Search the rest of the catalog…"
+                  className="mb-2"
+                />
+                <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto">
+                  {otherProducts.map((p) => {
+                    const on = remoteSku?.sku === p.sku;
+                    return (
+                      <button
+                        key={p.sku}
+                        type="button"
+                        onClick={() => {
+                          setRemoteSku(p);
+                          setBrand(STORE.name);
+                          setProduct(p.name);
+                          setOffer(`$${p.price} one-time. Watch it run on your own task first.`);
+                          setNotes(p.blurb);
+                          setObjective("conversions");
+                          setPlatforms(["search", "social"]);
+                          setCpcBid(suggestedBid(["search", "social"], dailyBudget));
+                          setDestination(STORE.href);
+                          setDraft(null);
+                        }}
+                        className={cn(
+                          "h-11 rounded-full border px-3 text-xs sm:text-sm transition-colors duration-150",
+                          on
+                            ? "border-primary bg-primary text-primary-fg"
+                            : "border-border bg-raised text-muted hover:text-fg",
+                        )}
+                      >
+                        {p.name}
+                      </button>
+                    );
+                  })}
+                  {!otherProducts.length && storefront.length > flagshipIds.size && (
+                    <p className="text-xs text-muted">No matches for “{productSearch}”.</p>
+                  )}
                 </div>
               </div>
               <Field label="Brand">

@@ -31,6 +31,12 @@ export type Proof = {
   spec: string;
   sample: string;
   license: string;
+  // When true, `spec` is not an executable prompt — it's descriptive text
+  // only (a blurb, used for bindSpec's page-bound fallback). The actual run
+  // delegates to multinicheai.com's own Live Proof engine (/api/demo) for
+  // this SKU instead of executing `spec` locally. See runAd() in
+  // exchange.server.ts and fetchStorefrontDemo() in catalog-remote.ts.
+  remote?: boolean;
 };
 
 export type PageTask = {

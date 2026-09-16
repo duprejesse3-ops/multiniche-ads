@@ -15,11 +15,30 @@ export function findSkuForCampaign(c: Campaign): CatalogSku | undefined {
   return CATALOG.find((s) => hay.includes(s.name.toLowerCase()));
 }
 
-export function attachProof(c: Campaign): Campaign {
+export async function attachProof(c: Campaign): Promise<Campaign> {
   if (c.proof?.spec) return c;
   const sku = findSkuForCampaign(c);
-  if (!sku?.spec) return c;
-  return { ...c, proof: proofFromSku(sku), aov: c.aov || sku.price };
+  if (sku?.spec) return { ...c, proof: proofFromSku(sku), aov: c.aov || sku.price };
+
+  // Not one of the 9 hand-curated flagships — try the real storefront
+  // catalog (74 products and growing) instead of leaving this campaign with
+  // no runnable proof at all.
+  const { fetchStorefrontCatalog, findStorefrontProductByName } = await import("./catalog-remote");
+  const hay = `${c.product} ${c.name}`.toLowerCase();
+  const products = await fetchStorefrontCatalog();
+  const remote = findStorefrontProductByName(products, hay);
+  if (!remote) return c;
+  return {
+    ...c,
+    proof: {
+      sku: remote.sku,
+      spec: remote.blurb,
+      sample: remote.blurb,
+      license: "One-time. Yours to keep.",
+      remote: true,
+    },
+    aov: c.aov || remote.price,
+  };
 }
 
 export function runPrice(eventPrice: number, bid: number) {

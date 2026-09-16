@@ -21,8 +21,8 @@ const aud = (
 const HOUSE = STORE.name;
 const DEST = STORE.href;
 
-export function seedCampaigns(): Campaign[] {
-  return rawSeed().map(attachProof);
+export async function seedCampaigns(): Promise<Campaign[]> {
+  return Promise.all(rawSeed().map(attachProof));
 }
 
 function rawSeed(): Campaign[] {
