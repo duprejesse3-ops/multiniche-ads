@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Bookmark, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdPreview } from "@/components/ad-preview";
 import { AppShell } from "@/components/app-shell";
@@ -10,6 +10,7 @@ import { Input, Textarea } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { composeVariants } from "@/lib/ai";
 import { CATALOG, STORE } from "@/lib/catalog";
+import { fetchStorefrontCatalog, type StorefrontProduct } from "@/lib/catalog-remote";
 import { platformLabel } from "@/lib/format";
 import { useDesk } from "@/lib/store";
 import type { AdCreative, Platform } from "@/lib/types";
@@ -36,6 +37,24 @@ function StudioPage() {
   const [busy, setBusy] = useState(false);
   const [variants, setVariants] = useState<AdCreative[]>([]);
   const [attachId, setAttachId] = useState(campaigns[0]?.id ?? "");
+  const [storefront, setStorefront] = useState<StorefrontProduct[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetchStorefrontCatalog().then((products) => {
+      if (!cancelled) setStorefront(products);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const allProducts = [
+    ...CATALOG.map((s) => ({ id: s.id, name: s.name, price: s.price, notes: `${s.blurb} ${s.notes}` })),
+    ...storefront
+      .filter((p) => !CATALOG.some((s) => s.id === p.sku))
+      .map((p) => ({ id: p.sku, name: p.name, price: p.price, notes: p.blurb })),
+  ];
 
   async function generate() {
     if (!brand.trim() || !product.trim()) {
@@ -103,15 +122,15 @@ function StudioPage() {
               <Label>Product</Label>
               <select
                 className="h-11 w-full rounded-md border border-border bg-raised px-3 text-sm text-fg"
-                value={CATALOG.find((s) => s.name === product)?.id ?? CATALOG[0].id}
+                value={allProducts.find((s) => s.name === product)?.id ?? allProducts[0]?.id ?? ""}
                 onChange={(e) => {
-                  const sku = CATALOG.find((s) => s.id === e.target.value);
+                  const sku = allProducts.find((s) => s.id === e.target.value);
                   if (!sku) return;
                   setProduct(sku.name);
-                  setNotes(`${sku.blurb} ${sku.notes}`);
+                  setNotes(sku.notes);
                 }}
               >
-                {CATALOG.map((s) => (
+                {allProducts.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name} · ${s.price}
                   </option>
